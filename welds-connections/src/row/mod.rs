@@ -2,7 +2,7 @@ use crate::errors::Result;
 
 /// A row of data from the database
 pub struct Row {
-    inner: RowInner,
+    pub inner: RowInner,
 }
 
 #[cfg(feature = "mysql")]
