@@ -20,17 +20,17 @@ pub mod sqlite;
 
 pub struct Fetch<'s, 'args, 't> {
     pub sql: &'s str,
-    pub params: &'args [&'t (dyn Param + Sync)],
+    pub params: &'args [&'t (dyn Param + Sync + Send)],
 }
 
 #[async_trait]
 /// The common trait for database connections and transactions.
 pub trait Client: Sync + Send {
     /// Execute a sql command. returns the number of rows that were affected
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<ExecuteResult>;
+    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult>;
 
     /// Runs SQL and returns a collection of rows from the database.
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<Vec<Row>>;
+    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>>;
 
     /// Run several `fetch_rows` command on the same connection in the connection pool
     async fn fetch_many<'s, 'args, 't>(

@@ -50,7 +50,7 @@ use sqlx::types::Type;
 
 #[async_trait]
 impl Client for PostgresClient {
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<ExecuteResult> {
+    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult> {
         let mut query = sqlx::query::<Postgres>(sql);
         for param in params {
             query = PostgresParam::add_param(*param, query);
@@ -61,7 +61,7 @@ impl Client for PostgresClient {
         })
     }
 
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<Vec<Row>> {
+    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>> {
         let mut query = sqlx::query::<Postgres>(sql);
         for param in params {
             query = PostgresParam::add_param(*param, query);

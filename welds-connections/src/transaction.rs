@@ -122,14 +122,14 @@ impl<'t> Client for Transaction<'t> {
         self.syntax
     }
 
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<ExecuteResult> {
+    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult> {
         let mut inner = self.take_conn();
         let results = execute_inner(&mut inner, sql, params).await;
         self.return_conn(inner);
         results
     }
 
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<Vec<Row>> {
+    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>> {
         let mut inner = self.take_conn();
         let results = fetch_rows_inner(&mut inner, sql, params).await;
         self.return_conn(inner);
@@ -162,7 +162,7 @@ impl<'t> Client for Transaction<'t> {
 async fn execute_inner<'t>(
     inner: &mut TransT<'t>,
     sql: &str,
-    params: &[&(dyn Param + Sync)],
+    params: &[&(dyn Param + Sync + Send)],
 ) -> Result<ExecuteResult> {
     match inner {
         #[cfg(feature = "sqlite")]
@@ -218,7 +218,7 @@ async fn execute_inner<'t>(
 async fn fetch_rows_inner<'t>(
     inner: &mut TransT<'t>,
     sql: &str,
-    params: &[&(dyn Param + Sync)],
+    params: &[&(dyn Param + Sync + Send)],
 ) -> Result<Vec<Row>> {
     match inner {
         #[cfg(feature = "sqlite")]

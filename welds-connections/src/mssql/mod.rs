@@ -74,7 +74,7 @@ impl MssqlClient {
 
 #[async_trait]
 impl Client for MssqlClient {
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<ExecuteResult> {
+    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult> {
         let mut conn = self.pool.get().await?;
         let mut args: Vec<&dyn ToSql> = Vec::new();
         for &p in params {
@@ -87,7 +87,7 @@ impl Client for MssqlClient {
         })
     }
 
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<Vec<Row>> {
+    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>> {
         let mut conn = self.pool.get().await?;
         let mut args: Vec<&dyn ToSql> = Vec::new();
         for &p in params {

@@ -108,7 +108,7 @@ impl<'t> MssqlTransaction<'t> {
 
 #[async_trait]
 impl<'t> Client for MssqlTransaction<'t> {
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<ExecuteResult> {
+    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult> {
         assert_eq!(self.state, State::Open);
         let mut conn = self.take_conn();
         let mut args: Vec<&dyn ToSql> = Vec::new();
@@ -125,7 +125,7 @@ impl<'t> Client for MssqlTransaction<'t> {
         })
     }
 
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync)]) -> Result<Vec<Row>> {
+    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>> {
         assert_eq!(self.state, State::Open);
         let mut conn = self.take_conn();
         let results = fetch_rows_inner(&mut conn, sql, params).await;
@@ -163,7 +163,7 @@ impl<'t> Client for MssqlTransaction<'t> {
 async fn fetch_rows_inner<'t>(
     conn: &mut DbConn,
     sql: &str,
-    params: &[&(dyn Param + Sync)],
+    params: &[&(dyn Param + Sync + Send)],
 ) -> Result<Vec<Row>> {
     let mut args: Vec<&dyn ToSql> = Vec::new();
     for &p in params {
