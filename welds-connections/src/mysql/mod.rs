@@ -5,10 +5,11 @@ use super::{Client, Param};
 use crate::errors::Result;
 use crate::ExecuteResult;
 use async_trait::async_trait;
-use sqlx::mysql::MySqlArguments;
+use sqlx::mysql::{MySqlArguments, MySqlPoolOptions};
 use sqlx::query::Query;
 use sqlx::{MySql, MySqlPool};
 use std::sync::Arc;
+use std::time::Duration;
 
 pub struct MysqlClient {
     pool: Arc<MySqlPool>,
@@ -23,8 +24,12 @@ impl TransactStart for MysqlClient {
     }
 }
 
-pub async fn connect(url: &str) -> Result<MysqlClient> {
-    let pool = MySqlPool::connect(url).await?;
+pub async fn connect(url: &str, timeout: Option<Duration>) -> Result<MysqlClient> {
+    let mut pool = MySqlPoolOptions::new();
+    if let Some(timeout) = timeout {
+        pool = pool.acquire_timeout(timeout);
+    }
+    let pool = pool.connect(url).await?;
     Ok(MysqlClient {
         pool: Arc::new(pool),
     })

@@ -5,10 +5,11 @@ use super::{Client, Param};
 use crate::errors::Result;
 use crate::ExecuteResult;
 use async_trait::async_trait;
-use sqlx::postgres::PgArguments;
+use sqlx::postgres::{PgArguments, PgPoolOptions};
 use sqlx::query::Query;
 use sqlx::{PgPool, Postgres};
 use std::sync::Arc;
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub struct PostgresClient {
@@ -24,8 +25,12 @@ impl TransactStart for PostgresClient {
     }
 }
 
-pub async fn connect(url: &str) -> Result<PostgresClient> {
-    let pool = PgPool::connect(url).await?;
+pub async fn connect(url: &str, timeout: Option<Duration>) -> Result<PostgresClient> {
+    let mut pool = PgPoolOptions::new();
+    if let Some(timeout) = timeout {
+        pool = pool.acquire_timeout(timeout);
+    }
+    let pool = pool.connect(url).await?;
     Ok(PostgresClient {
         pool: Arc::new(pool),
     })

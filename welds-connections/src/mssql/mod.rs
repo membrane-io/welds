@@ -6,6 +6,7 @@ use crate::errors::Result;
 use crate::ExecuteResult;
 use async_trait::async_trait;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tokio::sync::oneshot;
 
 use bb8::Pool;
@@ -52,9 +53,20 @@ impl TransactStart for MssqlClient {
     }
 }
 
-pub async fn connect(cs: &str) -> Result<MssqlClient> {
+pub async fn connect(
+    cs: &str,
+    timeout: Option<Duration>,
+    retry: Option<bool>,
+) -> Result<MssqlClient> {
     let mgr = bb8_tiberius::ConnectionManager::build(cs)?;
-    let pool = bb8::Pool::builder().max_size(2).build(mgr).await.unwrap();
+    let mut pool = bb8::Pool::builder().max_size(2);
+    if let Some(timeout) = timeout {
+        pool = pool.connection_timeout(timeout);
+    }
+    if let Some(retry) = retry {
+        pool = pool.retry_connection(retry);
+    }
+    let pool = pool.build(mgr).await.unwrap();
     Ok(MssqlClient { pool })
 }
 
@@ -74,7 +86,11 @@ impl MssqlClient {
 
 #[async_trait]
 impl Client for MssqlClient {
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult> {
+    async fn execute(
+        &self,
+        sql: &str,
+        params: &[&(dyn Param + Sync + Send)],
+    ) -> Result<ExecuteResult> {
         let mut conn = self.pool.get().await?;
         let mut args: Vec<&dyn ToSql> = Vec::new();
         for &p in params {
@@ -87,7 +103,11 @@ impl Client for MssqlClient {
         })
     }
 
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>> {
+    async fn fetch_rows(
+        &self,
+        sql: &str,
+        params: &[&(dyn Param + Sync + Send)],
+    ) -> Result<Vec<Row>> {
         let mut conn = self.pool.get().await?;
         let mut args: Vec<&dyn ToSql> = Vec::new();
         for &p in params {
