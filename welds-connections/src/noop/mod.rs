@@ -42,7 +42,11 @@ impl NoopClient {
 
 #[async_trait]
 impl Client for NoopClient {
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult> {
+    async fn execute(
+        &self,
+        sql: &str,
+        params: &[&(dyn Param + Sync + Send)],
+    ) -> Result<ExecuteResult> {
         // save off the sql
         let lock = self.last_sql.clone();
         let mut mutex = lock.lock().unwrap();
@@ -57,7 +61,11 @@ impl Client for NoopClient {
         Ok(ExecuteResult { rows_affected: 0 })
     }
 
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>> {
+    async fn fetch_rows(
+        &self,
+        sql: &str,
+        params: &[&(dyn Param + Sync + Send)],
+    ) -> Result<Vec<Row>> {
         // save off the sql
         let lock = self.last_sql.clone();
         let mut mutex = lock.lock().unwrap();

@@ -49,7 +49,11 @@ use sqlx::types::Type;
 
 #[async_trait]
 impl Client for MysqlClient {
-    async fn execute(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<ExecuteResult> {
+    async fn execute(
+        &self,
+        sql: &str,
+        params: &[&(dyn Param + Sync + Send)],
+    ) -> Result<ExecuteResult> {
         let mut query = sqlx::query::<MySql>(sql);
         for param in params {
             query = MysqlParam::add_param(*param, query);
@@ -60,7 +64,11 @@ impl Client for MysqlClient {
         })
     }
 
-    async fn fetch_rows(&self, sql: &str, params: &[&(dyn Param + Sync + Send)]) -> Result<Vec<Row>> {
+    async fn fetch_rows(
+        &self,
+        sql: &str,
+        params: &[&(dyn Param + Sync + Send)],
+    ) -> Result<Vec<Row>> {
         let mut query = sqlx::query::<MySql>(sql);
         for param in params {
             query = MysqlParam::add_param(*param, query);
