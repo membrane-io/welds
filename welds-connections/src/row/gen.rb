@@ -33,7 +33,7 @@ impl Row {
             #[cfg(feature = "sqlite")]
             RowInner::Sqlite(r) => Ok(r.try_get(index)?),
             #[cfg(feature = "mssql")]
-            RowInner::Mssql(r) => r.try_get_by_posision(index),
+            RowInner::Mssql(r) => r.try_get_by_position(index),
             #[cfg(feature = "postgres")]
             RowInner::Postgres(r) => Ok(r.try_get(index)?),
             #[cfg(feature = "mysql")]
