@@ -24,10 +24,17 @@ impl TransactStart for MysqlClient {
     }
 }
 
-pub async fn connect(url: &str, timeout: Option<Duration>) -> Result<MysqlClient> {
+pub async fn connect(
+    url: &str,
+    timeout: Option<Duration>,
+    max_connections: Option<usize>,
+) -> Result<MysqlClient> {
     let mut pool = MySqlPoolOptions::new();
     if let Some(timeout) = timeout {
         pool = pool.acquire_timeout(timeout);
+    }
+    if let Some(max_connections) = max_connections {
+        pool = pool.max_connections(max_connections as _);
     }
     let pool = pool.connect(url).await?;
     Ok(MysqlClient {

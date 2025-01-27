@@ -55,7 +55,7 @@ pub trait Client: Sync + Send {
 /// builds a connection with whatever is in it.
 pub async fn connect_from_env() -> Result<Box<dyn Client>> {
     let url = std::env::var("DATABASE_URL").or(Err(Error::InvalidDatabaseUrl))?;
-    connect(&url, None, None).await
+    connect(&url, None, None, None).await
 }
 
 /// Returns a connection pool (Client) for the given connection string.
@@ -66,24 +66,25 @@ pub async fn connect(
     cs: impl Into<String>,
     timeout: Option<Duration>,
     retry: Option<bool>,
+    max_connections: Option<usize>,
 ) -> Result<Box<dyn Client>> {
     let cs: String = cs.into();
     #[cfg(feature = "postgres")]
     if cs.starts_with("postgresql:") {
         log::debug!("Welds connecting to Postgres");
-        let client = postgres::connect(&cs, timeout).await?;
+        let client = postgres::connect(&cs, timeout, max_connections).await?;
         return Ok(Box::new(client));
     }
     #[cfg(feature = "postgres")]
     if cs.starts_with("postgres:") {
         log::debug!("Welds connecting to Postgres");
-        let client = postgres::connect(&cs, timeout).await?;
+        let client = postgres::connect(&cs, timeout, max_connections).await?;
         return Ok(Box::new(client));
     }
     #[cfg(feature = "mysql")]
     if cs.starts_with("mysql:") {
         log::debug!("Welds connecting to MySql");
-        let client = mysql::connect(&cs, timeout).await?;
+        let client = mysql::connect(&cs, timeout, max_connections).await?;
         return Ok(Box::new(client));
     }
     #[cfg(feature = "sqlite")]
@@ -95,7 +96,7 @@ pub async fn connect(
     #[cfg(feature = "mssql")]
     if !cs.is_empty() {
         log::debug!("Welds connecting to MSSQL");
-        let client = mssql::connect(&cs, timeout, retry).await?;
+        let client = mssql::connect(&cs, timeout, retry, max_connections).await?;
         return Ok(Box::new(client));
     }
     Err(errors::Error::InvalidDatabaseUrl)
@@ -114,24 +115,25 @@ pub async fn connect_transaction_start(
     cs: impl Into<String>,
     timeout: Option<Duration>,
     retry: Option<bool>,
+    max_connections: Option<usize>,
 ) -> Result<Box<dyn TransactStart>> {
     let cs: String = cs.into();
     #[cfg(feature = "postgres")]
     if cs.starts_with("postgresql:") {
         log::debug!("Welds connecting to Postgres");
-        let client = postgres::connect(&cs, timeout).await?;
+        let client = postgres::connect(&cs, timeout, max_connections).await?;
         return Ok(Box::new(client));
     }
     #[cfg(feature = "postgres")]
     if cs.starts_with("postgres:") {
         log::debug!("Welds connecting to Postgres");
-        let client = postgres::connect(&cs, timeout).await?;
+        let client = postgres::connect(&cs, timeout, max_connections).await?;
         return Ok(Box::new(client));
     }
     #[cfg(feature = "mysql")]
     if cs.starts_with("mysql:") {
         log::debug!("Welds connecting to MySql");
-        let client = mysql::connect(&cs, timeout).await?;
+        let client = mysql::connect(&cs, timeout, max_connections).await?;
         return Ok(Box::new(client));
     }
     #[cfg(feature = "sqlite")]
@@ -143,7 +145,7 @@ pub async fn connect_transaction_start(
     #[cfg(feature = "mssql")]
     if !cs.is_empty() {
         log::debug!("Welds connecting to MSSQL");
-        let client = mssql::connect(&cs, timeout, retry).await?;
+        let client = mssql::connect(&cs, timeout, retry, max_connections).await?;
         return Ok(Box::new(client));
     }
     Err(errors::Error::InvalidDatabaseUrl)
@@ -154,7 +156,7 @@ pub async fn connect_transaction_start(
 /// returns a TransactStart not a client.
 pub async fn connect_transstart_from_env() -> Result<Box<dyn TransactStart>> {
     let url = std::env::var("DATABASE_URL").or(Err(Error::InvalidDatabaseUrl))?;
-    connect_transaction_start(&url, None, None).await
+    connect_transaction_start(&url, None, None, None).await
 }
 
 #[async_trait]

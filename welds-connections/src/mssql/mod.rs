@@ -57,9 +57,10 @@ pub async fn connect(
     cs: &str,
     timeout: Option<Duration>,
     retry: Option<bool>,
+    max_connections: Option<usize>,
 ) -> Result<MssqlClient> {
     let mgr = bb8_tiberius::ConnectionManager::build(cs)?;
-    let mut pool = bb8::Pool::builder().max_size(2);
+    let mut pool = bb8::Pool::builder().max_size(max_connections.unwrap_or(2) as _);
     if let Some(timeout) = timeout {
         pool = pool.connection_timeout(timeout);
     }

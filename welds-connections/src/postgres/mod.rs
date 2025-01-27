@@ -25,10 +25,17 @@ impl TransactStart for PostgresClient {
     }
 }
 
-pub async fn connect(url: &str, timeout: Option<Duration>) -> Result<PostgresClient> {
+pub async fn connect(
+    url: &str,
+    timeout: Option<Duration>,
+    max_connections: Option<usize>,
+) -> Result<PostgresClient> {
     let mut pool = PgPoolOptions::new();
     if let Some(timeout) = timeout {
         pool = pool.acquire_timeout(timeout);
+    }
+    if let Some(max_connections) = max_connections {
+        pool = pool.max_connections(max_connections as _);
     }
     let pool = pool.connect(url).await?;
     Ok(PostgresClient {
