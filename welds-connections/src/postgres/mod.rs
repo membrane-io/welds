@@ -67,7 +67,7 @@ impl Client for PostgresClient {
         sql: &str,
         params: &[&(dyn Param + Sync + Send)],
     ) -> Result<ExecuteResult> {
-        let mut query = sqlx::query::<Postgres>(sql);
+        let mut query = sqlx::query::<Postgres>(sql).persistent(false);
         for param in params {
             query = PostgresParam::add_param(*param, query);
         }
@@ -82,7 +82,7 @@ impl Client for PostgresClient {
         sql: &str,
         params: &[&(dyn Param + Sync + Send)],
     ) -> Result<Vec<Row>> {
-        let mut query = sqlx::query::<Postgres>(sql);
+        let mut query = sqlx::query::<Postgres>(sql).persistent(false);
         for param in params {
             query = PostgresParam::add_param(*param, query);
         }
@@ -100,7 +100,7 @@ impl Client for PostgresClient {
         for fetch in fetches {
             let sql = fetch.sql;
             let params = fetch.params;
-            let mut query = sqlx::query::<Postgres>(sql);
+            let mut query = sqlx::query::<Postgres>(sql).persistent(false);
             for param in params {
                 query = PostgresParam::add_param(*param, query);
             }
