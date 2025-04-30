@@ -5,7 +5,7 @@ use super::{Client, Param};
 use crate::errors::Result;
 use crate::ExecuteResult;
 use async_trait::async_trait;
-use sqlx::postgres::{PgArguments, PgPoolOptions};
+use sqlx::postgres::{PgArguments, PgConnectOptions, PgPoolOptions};
 use sqlx::query::Query;
 use sqlx::{PgPool, Postgres};
 use std::sync::Arc;
@@ -30,14 +30,15 @@ pub async fn connect(
     timeout: Option<Duration>,
     max_connections: Option<usize>,
 ) -> Result<PostgresClient> {
-    let mut pool = PgPoolOptions::new();
+    let connect_opts = url.parse::<PgConnectOptions>()?.statement_cache_capacity(0);
+    let mut pool_opts = PgPoolOptions::new();
     if let Some(timeout) = timeout {
-        pool = pool.acquire_timeout(timeout);
+        pool_opts = pool_opts.acquire_timeout(timeout);
     }
     if let Some(max_connections) = max_connections {
-        pool = pool.max_connections(max_connections as _);
+        pool_opts = pool_opts.max_connections(max_connections as _);
     }
-    let pool = pool.connect(url).await?;
+    let pool = pool_opts.connect_with(connect_opts).await?;
     Ok(PostgresClient {
         pool: Arc::new(pool),
     })
